@@ -84,18 +84,43 @@ function drawGame() {
 
   if (snakeX == food.x && snakeY == food.y) {
     score++;
-    food = {
-      x: Math.floor(Math.random() * 17 + 1) * box,
-      y: Math.floor(Math.random() * 15 + 3) * box,
-    };
+    let mathFoodX = Math.floor(Math.random() * 17 + 1) * box;
+    let mathFoodY = Math.floor(Math.random() * 15 + 3) * box;
+
+    if (
+      food2.x == mathFoodX &&
+      food2.y == mathFoodY &&
+      mathFoodX !== 9 * box &&
+      mathFoodY !== 10 * box
+    ) {
+      mathFoodX = 9 * box;
+      mathFoodY = 10 * box;
+    } else {
+      food = {
+        x: mathFoodX,
+        y: mathFoodY,
+      };
+    }
   } else if (snakeX == food2.x && snakeY == food2.y) {
     score++;
-    food2 = {
-      x: Math.floor(Math.random() * 17 + 1) * box,
-      y: Math.floor(Math.random() * 15 + 3) * box,
-    };
+    let mathFood2X = Math.floor(Math.random() * 17 + 1) * box;
+    let mathFood2Y = Math.floor(Math.random() * 15 + 3) * box;
+    if (
+      food.x == mathFood2X &&
+      food.y == mathFood2Y &&
+      mathFoodX !== 9 * box &&
+      mathFoodY !== 10 * box
+    ) {
+      mathFood2X = 9 * box;
+      mathFood2Y = 10 * box;
+    } else {
+      food2 = {
+        x: mathFood2X,
+        y: mathFood2Y,
+      };
+    }
   } else {
-    snake.pop(); 
+    snake.pop();
   }
 
   if (
