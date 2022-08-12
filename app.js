@@ -95,7 +95,7 @@ function drawGame() {
       y: Math.floor(Math.random() * 15 + 3) * box,
     };
   } else {
-    snake.pop();
+    snake.pop(); 
   }
 
   if (
