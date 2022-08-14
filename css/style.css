@@ -1,4 +1,28 @@
 canvas{
     display: block;
     margin: 0 auto;
+    padding-bottom: 30px;
+}
+.btn{
+    border-radius: 8px;
+     background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 20px 45px;
+    
+    text-decoration: none;
+    display: block;
+    font-size: 24px;
+     margin: 0 auto
+    
+}
+.btn:active{
+    background-color: #125214;
+}
+.radioButton{
+     font-size: 24px;
+   
+ display:block;
+ margin: 0 auto;
+    
 }
