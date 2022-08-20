@@ -18,8 +18,9 @@ canvas {
 .btn:active {
   background-color: #125214;
 }
-form {
+
+p {
   font-size: 24px;
-  margin-left: 540px;
-  margin-bottom: 20px;
+  display: block;
+  text-align: center;
 }
