@@ -1,219 +1,225 @@
-let hiScore = 0;
 let MyGame;
 let dir;
-/* let speed =300 */
+let speed = 0;
+let dirWasChanged = false;
+
+let box = 32;
+let hiScore = 0;
+let score = 0;
+let count = 0;
+
+let snake = [];
+let food;
+let food2;
+
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-ctx.font = "50px Arial";
-ctx.fillStyle = "rgba(76, 175, 80,1)";
-ctx.rect(0, 0, 608, 608);
-ctx.fill();
-ctx.fillStyle = "red";
-ctx.fillText("PRESS START", 130, 300);
-ctx.fillText("BUTTON", 200, 400);
 
 const ground = new Image();
 ground.src = "img/ground.png";
-
 const pizzaImg = new Image();
 pizzaImg.src = "img/pizza.png";
 const hamurgerImg = new Image();
 hamurgerImg.src = "img/hamburg.png";
-let box = 32;
 
-let score = 0;
-function state() {
-  let food = {
+// first draw
+const initialDraw = () => {
+  ctx.font = "50px Arial";
+  ctx.fillStyle = "rgba(76, 175, 80,1)";
+  ctx.rect(0, 0, 608, 608);
+  ctx.fill();
+  ctx.fillStyle = "red";
+  ctx.fillText("PRESS START", 130, 300);
+  ctx.fillText("BUTTON", 200, 400);
+};
+
+// generate new food exclude points for snake
+const generateFood = (currentSnake) => {
+ 
+  let newFood = {
     x: Math.floor(Math.random() * 17 + 1) * box,
     y: Math.floor(Math.random() * 15 + 3) * box,
   };
-  let food2 = {
-    x: Math.floor(Math.random() * 17 + 1) * box,
-    y: Math.floor(Math.random() * 15 + 3) * box,
-  };
 
-  let snake = [];
-  snake[0] = {
-    x: 9 * box,
-    y: 10 * box,
-  };
+  if (currentSnake) {
+    // generate new food in "free box"
+    while (
+      snake.some(
+        (snakePart) => snakePart.x === newFood.x && snakePart.y === newFood.y
+      )
+    ) {
+      // generate food in random position
+      newFood = generateFood();
+    
+    }
+  }
 
-  return [food, food2, snake];
-}
+  return newFood;
+};
+
+const resetGame = () => {
+  snake = [
+    {
+      x: 9 * box,
+      y: 10 * box,
+    },
+  ];
+  food = generateFood(snake);
+  food2 = generateFood(snake);
+};
+
 function gameover() {
+  const button = document.getElementById("btn");
+  window.cancelAnimationFrame(MyGame);
+
   ctx.font = "36px Arial";
   ctx.fillStyle = "red";
   ctx.fillText("Game Over", box * 6, box * 10);
+
+  if (hiScore < score) {
+    hiScore = score;
+  }
+
+  score = 0;
+  button.disabled = false;
+  document.removeEventListener("keydown", findDir);
 }
 
-function onclickRadio() {
-  var inp = document.getElementsByName("speed");
-  for (var i = 0; i < inp.length; i++) {
-    if (inp[i].type == "radio" && inp[i].checked) {
-      speed = inp[i].value;
-      return speed;
+function getSpeedValue() {
+  const inp = document.getElementsByName("speed");
+  for (let i = 0; i < inp.length; i++) {
+    if (inp[i].type === "radio" && inp[i].checked) {
+      return inp[i].value;
     }
   }
 }
-function keydown() {
-  document.addEventListener("keydown", direction);
-  function direction(event) {
-    if (event.keyCode == 37 && dir != "right") {
+
+function findDir(event) {
+  console.log(dirWasChanged,"dirwas")
+  // change dir only 1 time per frame
+  if (!dirWasChanged) {
+    if ([37, 65].includes(event.keyCode) && dir !== "right") {
       dir = "left";
-    } else if (event.keyCode == 65 && dir != "right") {
-      dir = "left";
-    } else if (event.keyCode == 38 && dir != "down") {
+      dirWasChanged = true;
+      console.log(dirWasChanged, "dirwas1");
+    } else if ([38, 87].includes(event.keyCode) && dir !== "down") {
       dir = "up";
-    } else if (event.keyCode == 87 && dir != "down") {
-      dir = "up";
-    } else if (event.keyCode == 39 && dir != "left") {
+      dirWasChanged = true;
+    } else if ([39, 68].includes(event.keyCode) && dir !== "left") {
       dir = "right";
-    } else if (event.keyCode == 68 && dir != "left") {
-      dir = "right";
-    } else if (event.keyCode == 40 && dir != "up") {
+      dirWasChanged = true;
+    } else if ([40, 83].includes(event.keyCode) && dir !== "up") {
       dir = "down";
-    } else if (event.keyCode == 83 && dir != "up") {
-      dir = "down";
+      dirWasChanged = true;
     }
   }
-  return dir;
 }
 function eatTail(head, arr) {
   for (let i = 0; i < arr.length; i++) {
-    if (head.x == arr[i].x && head.y == arr[i].y) {
-      window.cancelAnimationFrame(MyGame);
+    if (checkFoodWasEaten(head, snake[i])) {
       gameover();
-
-      if (hiScore < score) {
-        hiScore = score;
-      }
-      const button = document.getElementById("btn");
-      button.disabled = false;
-      document.removeEventListener("keydown", direction);
     }
   }
 }
 
-let count = 0;
+const checkFoodWasEaten = (snakesHead, food) =>
+  snakesHead.x === food.x && snakesHead.y === food.y;
+
+const updateCanvas = () => {
+  ctx.drawImage(ground, 0, 0);
+
+  ctx.drawImage(pizzaImg, food.x, food.y);
+  ctx.drawImage(hamurgerImg, food2.x, food2.y);
+
+  for (let i = 0; i < snake.length; i++) {
+    ctx.fillStyle = i == 0 ? "rgba(225,0,0,1)" : "rgba(59, 117, 12,0.7)";
+
+    ctx.beginPath();
+    ctx.arc(snake[i].x + 16, snake[i].y + 16, 16, 0, Math.PI * 2, false);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.font = "50px Arial";
+  ctx.fillStyle = "white";
+  ctx.fillText(score, box * 2.5, box * 1.7);
+  ctx.font = "25px Arial";
+
+  ctx.fillText("hiscore:", box * 13, box * 1.7);
+  ctx.fillText(hiScore, box * 16, box * 1.7);
+};
+
 function start() {
-  keydown();
+  // reset all variables
+  resetGame();
+
   const button = document.getElementById("btn");
+  document.addEventListener("keydown", findDir);
+
   dir = undefined;
   button.disabled = true;
 
-  let [food, food2, snake] = state();
   MyGame = window.requestAnimationFrame(game);
-  onclickRadio();
+  speed = getSpeedValue();
+console.log(speed,"speed")
   function game() {
+    // save head position in snakesHead variable and save link on it
+    const snakesHead = snake[0];
     MyGame = window.requestAnimationFrame(game);
+
     if (++count > speed) {
+      dirWasChanged = false;
       count = 0;
 
-      ctx.drawImage(ground, 0, 0);
-
-      ctx.drawImage(pizzaImg, food.x, food.y);
-      ctx.drawImage(hamurgerImg, food2.x, food2.y);
-
-      for (let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i == 0 ? "rgba(225,0,0,1)" : "rgba(59, 117, 12,0.7)";
-
-        ctx.beginPath();
-        ctx.arc(snake[i].x + 16, snake[i].y + 16, 16, 0, Math.PI * 2, false);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      ctx.font = "50px Arial";
-      ctx.fillStyle = "white";
-      ctx.fillText(score, box * 2.5, box * 1.7);
-      ctx.font = "25px Arial";
-
-      ctx.fillText("hiscore:", box * 13, box * 1.7);
-      ctx.fillText(hiScore, box * 16, box * 1.7);
-      let snakeX = snake[0].x;
-
-      let snakeY = snake[0].y;
-
-      if (snakeX == food.x && snakeY == food.y) {
+      if (checkFoodWasEaten(snakesHead, food)) {
         score++;
-        let mathFoodX = Math.floor(Math.random() * 17 + 1) * box;
-        let mathFoodY = Math.floor(Math.random() * 15 + 3) * box;
-
-        if (
-          food2.x == mathFoodX &&
-          food2.y == mathFoodY &&
-          mathFoodX !== 9 * box &&
-          mathFoodY !== 10 * box
-        ) {
-          mathFoodX = 9 * box;
-          mathFoodY = 10 * box;
-        } else {
-          food = {
-            x: mathFoodX,
-            y: mathFoodY,
-          };
-        }
-      } else if (snakeX == food2.x && snakeY == food2.y) {
+        food = generateFood(snake);
+      } else if (checkFoodWasEaten(snakesHead, food2)) {
         score++;
-        let mathFood2X = Math.floor(Math.random() * 17 + 1) * box;
-        let mathFood2Y = Math.floor(Math.random() * 15 + 3) * box;
-        if (
-          food.x == mathFood2X &&
-          food.y == mathFood2Y &&
-          mathFoodX !== 9 * box &&
-          mathFoodY !== 10 * box
-        ) {
-          mathFood2X = 9 * box;
-          mathFood2Y = 10 * box;
-        } else {
-          food2 = {
-            x: mathFood2X,
-            y: mathFood2Y,
-          };
-        }
+        food2 = generateFood(snake);
       } else {
+        // delete tail
         snake.pop();
       }
 
+      // game over flow
       if (
-        snakeX - box / 2 < box ||
-        snakeX - box / 2 > box * 17 ||
-        snakeY - box / 2 < 3 * box ||
-        snakeY - box / 2 > box * 17
+        snakesHead.x - box / 2 < box ||
+        snakesHead.x - box / 2 > box * 17 ||
+        snakesHead.y - box / 2 < 3 * box ||
+        snakesHead.y - box / 2 > box * 17
       ) {
-        window.cancelAnimationFrame(MyGame);
-
         gameover();
 
-        if (hiScore < score) {
-          hiScore = score;
-        }
-        button.disabled = false;
-        document.removeEventListener("keydown", direction);
-        return console.log("gameover");
+        return;
       }
 
-      if (dir == "left") {
-        snakeX -= box;
-      }
-      if (dir == "right") {
-        snakeX += box;
-      }
-      if (dir == "up") {
-        snakeY -= box;
-      }
-      if (dir == "down") {
-        snakeY += box;
-      }
+      // create new object "snakesHead"
+      const newHead = { ...snakesHead };
 
-      let newHead = {
-        x: snakeX,
-        y: snakeY,
-      };
+      switch (dir) {
+        case "left":
+          newHead.x -= box;
+          break;
+        case "right":
+          newHead.x += box;
+          break;
+        case "up":
+          newHead.y -= box;
+          break;
+        case "down":
+          newHead.y += box;
+          break;
+      }
 
       eatTail(newHead, snake);
 
       snake.unshift(newHead);
+
+      // update canvas in the end of func
+      updateCanvas();
     }
   }
 }
+
+initialDraw();
